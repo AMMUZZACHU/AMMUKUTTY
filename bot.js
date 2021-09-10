@@ -1,286 +1,224 @@
-/* Copyright (C) 2020 Yusuf Usta.
-Licensed under the  GPL-3.0 License;
-you may not use this file except in compliance with the License.
-WhatsAsena - Yusuf Usta
-*/
+<!-- Typing SVG -->
+<p align="center">
+    <a href="https://git.io/J0hKr">
+        <img
+            src="https://readme-typing-svg.herokuapp.com?size=30&width=800&lines=09-Sep-2021+Wednesday"
+            alt="Typing SVG"
+        />
+    </a>
+</p>
 
-const fs = require("fs");
-const path = require("path");
-const events = require("./events");
-const chalk = require('chalk');
-const config = require('./config');
-const {WAConnection, MessageType, Presence} = require('@adiwajshing/baileys');
-const {Message, StringSession, Image, Video} = require('./whatsasena/');
-const { DataTypes } = require('sequelize');
-const { getMessage } = require("./plugins/sql/greetings");
-const axios = require('axios');
-const got = require('got');
 
-// Sql
-const WhatsAsenaDB = config.DATABASE.define('WhatsAsena', {
-    info: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    value: {
-        type: DataTypes.TEXT,
-        allowNull: false
-    }
-});
+##
 
-fs.readdirSync('./plugins/sql/').forEach(plugin => {
-    if(path.extname(plugin).toLowerCase() == '.js') {
-        require('./plugins/sql/' + plugin);
-    }
-});
+<h1 align="center">Hello Dude🙋🏻‍♀️Welcome to my Repo <img src="https://user-images.githubusercontent.com/1303154/88677602-1635ba80-d120-11ea-84d8-d263ba5fc3c0.gif" width="40px" alt="hi"><br>
+<p align="center">
 
-const plugindb = require('./plugins/sql/plugin');
+## 📢Introduce myself
 
-// Yalnızca bir kolaylık. https://stackoverflow.com/questions/4974238/javascript-equivalent-of-pythons-format-function //
-String.prototype.format = function () {
-    var i = 0, args = arguments;
-    return this.replace(/{}/g, function () {
-      return typeof args[i] != 'undefined' ? args[i++] : '';
-   });
-};
-if (!Date.now) {
-    Date.now = function() { return new Date().getTime(); }
-}
+- 🙂 I'm ACHU sir
+- 🚩 I'm a beginner in this field
+- 📍 From Kattappana,Idukki,Kerala,🇮🇳
+- 🎮 BGMI player (ID:5444486441)
+- 🏫 Now I'm studing in Gandhiji engi medium school santhigram,IDUKKI
 
-Array.prototype.remove = function() {
-    var what, a = arguments, L = a.length, ax;
-    while (L && this.length) {
-        what = a[--L];
-        while ((ax = this.indexOf(what)) !== -1) {
-            this.splice(ax, 1);
-        }
-    }
-    return this;
-};
+```
+This is a modified version of WhatsAsena 1.3🙋🏻‍♀️It will be more useful to you
+```
 
-async function whatsAsena () {
-    await config.DATABASE.sync();
-    var StrSes_Db = await WhatsAsenaDB.findAll({
-        where: {
-          info: 'StringSession'
-        }
-    });
-    
-    
-    const conn = new WAConnection();
-    conn.version = [2, 2126, 14];
-    const Session = new StringSession();
-
-    conn.logger.level = config.DEBUG ? 'debug' : 'warn';
-    var nodb;
-
-    if (StrSes_Db.length < 1) {
-        nodb = true;
-        conn.loadAuthInfo(Session.deCrypt(config.SESSION)); 
-    } else {
-        conn.loadAuthInfo(Session.deCrypt(StrSes_Db[0].dataValues.value));
-    }
-
-    conn.on ('credentials-updated', async () => {
-        console.log(
-            chalk.blueBright.italic('✅ Login information updated!')
-        );
-
-        const authInfo = conn.base64EncodedAuthInfo();
-        if (StrSes_Db.length < 1) {
-            await WhatsAsenaDB.create({ info: "StringSession", value: Session.createStringSession(authInfo) });
-        } else {
-            await StrSes_Db[0].update({ value: Session.createStringSession(authInfo) });
-        }
-    })    
-
-    conn.on('connecting', async () => {
-        console.log(`${chalk.green.bold('Whats')}${chalk.blue.bold('Asena')}
-${chalk.white.bold('Version:')} ${chalk.red.bold(config.VERSION)}
-${chalk.blue.italic('ℹ️ Connecting to WhatsApp... Please wait.')}`);
-    });
-    
-
-    conn.on('open', async () => {
-        console.log(
-            chalk.green.bold('✅ Login successful!')
-        );
-
-        console.log(
-            chalk.blueBright.italic('⬇️ Installing external plugins...')
-        );
-
-        var plugins = await plugindb.PluginDB.findAll();
-        plugins.map(async (plugin) => {
-            if (!fs.existsSync('./plugins/' + plugin.dataValues.name + '.js')) {
-                console.log(plugin.dataValues.name);
-                var response = await got(plugin.dataValues.url);
-                if (response.statusCode == 200) {
-                    fs.writeFileSync('./plugins/' + plugin.dataValues.name + '.js', response.body);
-                    require('./plugins/' + plugin.dataValues.name + '.js');
-                }     
-            }
-        });
-
-        console.log(
-            chalk.blueBright.italic('🌈  Installing plugins...')
-        );
-
-        fs.readdirSync('./plugins').forEach(plugin => {
-            if(path.extname(plugin).toLowerCase() == '.js') {
-                require('./plugins/' + plugin);
-            }
-        });
-
-        console.log(
-            chalk.green.bold('AMMUKUTTY is Ferfect Ok! 💁🏻‍♀️')
-        );
-    });
-    
-    conn.on('chat-update', async m => {
-        if (!m.hasNewMessage) return;
-        if (!m.messages && !m.count) return;
-        let msg = m.messages.all()[0];
-        if (msg.key && msg.key.remoteJid == 'status@broadcast') return;
-
-        if (config.NO_ONLINE) {
-            await conn.updatePresence(msg.key.remoteJid, Presence.unavailable);
-        }
-
-        if (msg.messageStubType === 32 || msg.messageStubType === 28) {
-            // Görüşürüz Mesajı
-            var gb = await getMessage(msg.key.remoteJid, 'goodbye');
-            if (gb !== false) {
-                let pp
-                try { pp = await conn.getProfilePicture(msg.messageStubParameters[0]); } catch { pp = await conn.getProfilePicture(); }
-                await axios.get(pp, {responseType: 'arraybuffer'}).then(async (res) => {
-                await conn.sendMessage(msg.key.remoteJid, res.data, MessageType.image, {caption:  gb.message }); });
-            }
-            return;
-        } else if (msg.messageStubType === 27 || msg.messageStubType === 31) {
-            // Hoşgeldin Mesajı
-            var gb = await getMessage(msg.key.remoteJid);
-            if (gb !== false) {
-               let pp
-                try { pp = await conn.getProfilePicture(msg.messageStubParameters[0]); } catch { pp = await conn.getProfilePicture(); }
-                await axios.get(pp, {responseType: 'arraybuffer'}).then(async (res) => {
-                await conn.sendMessage(msg.key.remoteJid, res.data, MessageType.image, {caption:  gb.message }); });
-            }
-            return;
-        }
-
-        events.commands.map(
-            async (command) =>  {
-                if (msg.message && msg.message.imageMessage && msg.message.imageMessage.caption) {
-                    var text_msg = msg.message.imageMessage.caption;
-                } else if (msg.message && msg.message.videoMessage && msg.message.videoMessage.caption) {
-                    var text_msg = msg.message.videoMessage.caption;
-                } else if (msg.message) {
-                    var text_msg = msg.message.extendedTextMessage === null ? msg.message.conversation : msg.message.extendedTextMessage.text;
-                } else {
-                    var text_msg = undefined;
-                }
-
-                if ((command.on !== undefined && (command.on === 'image' || command.on === 'photo')
-                    && msg.message && msg.message.imageMessage !== null && 
-                    (command.pattern === undefined || (command.pattern !== undefined && 
-                        command.pattern.test(text_msg)))) || 
-                    (command.pattern !== undefined && command.pattern.test(text_msg)) || 
-                    (command.on !== undefined && command.on === 'text' && text_msg) ||
-                    // Video
-                    (command.on !== undefined && (command.on === 'video')
-                    && msg.message && msg.message.videoMessage !== null && 
-                    (command.pattern === undefined || (command.pattern !== undefined && 
-                        command.pattern.test(text_msg))))) {
-
-                    let sendMsg = false;
-                    var chat = conn.chats.get(msg.key.remoteJid)
-                        
-                    if ((config.SUDO !== false && msg.key.fromMe === false && command.fromMe === true &&
-                        (msg.participant && config.SUDO.includes(',') ? config.SUDO.split(',').includes(msg.participant.split('@')[0]) : msg.participant.split('@')[0] == config.SUDO || config.SUDO.includes(',') ? config.SUDO.split(',').includes(msg.key.remoteJid.split('@')[0]) : msg.key.remoteJid.split('@')[0] == config.SUDO)
-                    ) || command.fromMe === msg.key.fromMe || (command.fromMe === false && !msg.key.fromMe)) {
-                        if (command.onlyPinned && chat.pin === undefined) return;
-                        if (!command.onlyPm === chat.jid.includes('-')) sendMsg = true;
-                        else if (command.onlyGroup === chat.jid.includes('-')) sendMsg = true;
-                    }
-                    
-                    else if ((config.YAK !== false && msg.key.fromMe === false && command.fromMe === true &&
-                        (msg.participant && config.YAK.includes(',') ? config.YAK.split(',').includes(msg.participant.split('@')[0]) : msg.participant.split('@')[0] == config.YAK || config.YAK.includes(',') ? config.YAK.split(',').includes(msg.key.remoteJid.split('@')[0]) : msg.key.remoteJid.split('@')[0] == config.YAK)
-                    ) || command.fromMe === msg.key.fromMe || (command.fromMe === false && !msg.key.fromMe)) {
-                        if (command.onlyPinned && chat.pin === undefined) return;
-                        if (!command.onlyPm === chat.jid.includes('-')) sendMsg = true;
-                        else if (command.onlyGroup === chat.jid.includes('-')) sendMsg = true;
-                    }
+### Disclaimer ❗
+```
   
-                    if (sendMsg) {
-                        if (config.SEND_READ && command.on === undefined) {
-                            await conn.chatRead(msg.key.remoteJid);
-                        }
-                       
-                        var match = text_msg.match(command.pattern);
-                        
-                        if (command.on !== undefined && (command.on === 'image' || command.on === 'photo' )
-                        && msg.message.imageMessage !== null) {
-                            whats = new Image(conn, msg);
-                        } else if (command.on !== undefined && (command.on === 'video' )
-                        && msg.message.videoMessage !== null) {
-                            whats = new Video(conn, msg);
-                        } else {
-                            whats = new Message(conn, msg);
-                        }
-/*
-                        if (command.deleteCommand && msg.key.fromMe) {
-                            await whats.delete(); 
-                        }
-*/
-                        try {
-                            await command.function(whats, match);
-                        } catch (error) {
-                            if (config.LANG == 'TR' || config.LANG == 'AZ') {
-                                await conn.sendMessage(conn.user.jid, '-- HATA RAPORU [WHATSASENA] --' + 
-                                    '\n*WhatsAsena bir hata gerçekleşti!*'+
-                                    '\n_Bu hata logunda numaranız veya karşı bir tarafın numarası olabilir. Lütfen buna dikkat edin!_' +
-                                    '\n_Yardım için Telegram grubumuza yazabilirsiniz._' +
-                                    '\n_Bu mesaj sizin numaranıza (kaydedilen mesajlar) gitmiş olmalıdır._\n\n' +
-                                    'Gerçekleşen Hata: ' + error + '\n\n'
-                                    , MessageType.text);
-                            } else {
-                                await conn.sendMessage(conn.user.jid, '*~♥️🕊️______~ AMMUKUTTY ~_____🕊️♥️~*' +
-                                    '\n\n*🧞‍♂️ ' + error + '*\n'
-                                    , MessageType.text);
-                            }
-                        }
-                    }
-                }
-            }
-        )
-    });
+AMMUKUTTY - AMMUKUTTY Userbot is Open Source software open to development. 
+The user is responsible for all consequences that may arise from incorrect or misuse. 
+Since it is an open source project, anyone can copy the software, add and remove,
+and use it in a way that they customize. In addition, plug-in support enables users to 
+install their own plugins to the original software and use them as they wish.
+Using the bot out of purpose will explicitly ban you.
+Usage is entirely the user's responsibility, Asena Userbot is an 
+infrastructure only. Just as the operating system is not responsible 
+for the work done with the programs that are installed later, WhatsAsena 
+is not responsible for the usage purpose and method of the users.
+Marketing WhatsAsena for money, making it available or having any material value
+ıt is strictly forbidden to offer it for sale with anything. All legal investigations that may arise
+the user is responsible.
+```
 
-    try {
-        await conn.connect();
-    } catch {
-        if (!nodb) {
-            console.log(chalk.red.bold('Eski sürüm stringiniz yenileniyor...'))
-            conn.loadAuthInfo(Session.deCrypt(config.SESSION)); 
-            try {
-                await conn.connect();
-            } catch {
-                return;
-            }
-        }
-    }
-}
+### 𝐑𝐞𝐩𝐨𝐬𝐢𝐭𝐨𝐫𝐲 𝐒𝐭𝐚𝐭𝐮𝐬 ⚠️
+```
+𝙰𝚌𝚝𝚒𝚟𝚎 🟢
+```
 
-whatsAsena();
-© 2021 GitHub, Inc.
-Terms
-Privacy
-Security
-Status
-Docs
-Contact GitHub
-Pricing
-API
-Training
-Blog
-About
+## 𝐋𝐚𝐭𝐞𝐬𝐭 𝐔𝐩𝐝𝐚𝐭𝐞𝐬 🙋🏻‍♀️
+
+- ✅ New Baileys version updated (3.5.2) @adiwajshing/baileys
+- ✅ New QR updated
+- ✅ Eva Artifical Intelligence Bug Fixed...
+
+```
+   Last Update : 21/Aug/2021 - 11:52am
+```
+
+## 𝐔𝐩𝐜𝐨𝐦𝐢𝐧𝐠 𝐔𝐩𝐝𝐚𝐭𝐞𝐬 💁🏻‍♀️
+
+- ⬆️ Instagram Downloader
+- ⬆️ Facebook Downloader(𝐍𝐞𝐰)
+
+
+<div align="center">
+  <img border-radius: 15px src="IMG-20210909-WA0009.jpg" width="200" height="200"/>
+  <p align="center">
+
+
+<a href="#"><img title="AMMUKUTTY" src="https://img.shields.io/badge/AMMUKUTTY-green?colorA=%23ff0000&colorB=%23017e40&style=for-the-badge"></a>
+</p>
+  <p align="center">
+<a href="https://github.com/AMMUKUTTY"><img title="Author" src="https://img.shields.io/badge/Author-AMMUKUTTY/AMMUKUTTY?color=pink&style=for-the-badge&logo=whatsapp"></a>
+</p>
+</div>
+<p align="center">
+Project created by <a href="https://github.com/AMMUKUTTY">Vishnu Prasad</a> to make it public
+    <br>
+       | © |
+        Reserved |
+    <br> 
+</p>
+
+----
+
+  <p align="center">
+  <a href="httsp://github.com/AMMUKUTTY/AMMUKUTTY">
+    <img src="https://img.shields.io/github/repo-size/AMMUKUTTY/AMMUKUTTY?color=green&label=Repo%20total%20size&style=plastic">
+<p align="center">
+<a href="https://github.com/AMMUKUTTY/followers"><img title="Followers" src="https://img.shields.io/github/followers/AMMUKUTTY?color=pink&style=flat-square"></a>
+<a href="https://github.com/AMMUKUTTY/AMMUKUTTY/stargazers/"><img title="Stars" src="https://img.shields.io/github/stars/AMMUKUTTY/AMMUKUTTY?color=pink&style=flat-square"></a>
+<a href="https://github.com/AMMUKUTTY/AMMUKUTTY/network/members"><img title="Forks" src="https://img.shields.io/github/forks/AMMUKUTTY/AMMUKUTTY?color=pink&style=flat-square"></a>
+<a href="https://github.com/AMMUKUTTY/AMMUKUTTY/watchers"><img title="Watching" src="https://img.shields.io/github/watchers/AMMUKUTTY/AMMUKUTTY?label=Watchers&color=pink&style=flat-square"></a>
+<a href="#"><img title="MAINTENED" src="https://img.shields.io/badge/UNMAINTENED-YES-pink.svg"</a>
+</p>
+
+<h1 align="center"> Connect with me
+<p align="center">
+  <a href="https://instagram.com/phathicusthiccy"><img src="https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white"/> 
+  <a href="https://wa.me/916235989299"><img src="https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" />
+  <a href="https://https://www.facebook.com/danger666host"><img src="https://img.shields.io/badge/Facebook-%234267B2.svg?&style=for-the-badge&logo=facebook&logoColor=white" />
+  <a href="https://t.me/vishnuprasad62"><img src="https://img.shields.io/badge/Telegram-%230088cc.svg?&style=for-the-badge&logo=telegram&logoColor=white" /> <br>
+  <a href="https://github.com/AMMUKUTTY"><img src="https://img.shields.io/badge/-GitHub-black?style=flat-square&logo=github" /> 
+  
+</p>
+  
+
+<div align="center">
+<p align="center">&nbsp;<img align="center" src="https://github-readme-stats.vercel.app/api?username=AMMUKUTTY&show_icons=true&theme=nightowl" alt="AMMUKUTTY" /></p>
+
+<p align="center"><img align="center" src="https://github-readme-streak-stats.herokuapp.com/?user=AMMUKUTTY&theme=nightowl" alt="AMMUKUTTY" /></p>
+</details> </div>
+
+
+## 📢 Guide
+Click WA logo to Join Support Group 👇
+    <br>
+<br>
+  [![join](https://github.com/Alien-alfa/PublicBot/blob/main/wlogo.svg.png)](https://chat.whatsapp.com/Cj8KuqHIy1i3TF9yByBMJR)
+  <div align="center">
+       
+  [![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=AMMUKUTTY&repo=AMMUKUTTY&theme=nightowl)](https://github.com/AMMUKUTTY/AMMUKUTTY)
+  </div>
+    
+## Setup
+<div align="center">
+
+  ### Simple Method
+  
+[![Run on Repl.it](https://repl.it/badge/github/quiec/whatsAlfa)](https://replit.com/@vishnukyk/AMMUKUTTY-QR)
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/AMMUKUTTY/AMMUKUTTY)
+     </div>
+<br>
+<br >
+If Repl.it not working Try Termux for Qr scanning.Just Copy the Link Below in Termux or download Mozilla FireFox web browser and scan QR code...
+```
+----New baileys link will be publish soon---
+``` 
+  
+### The Hard Method
+```js
+GET QR
+$ apt update
+$ apt install nodejs --fix-missing
+$ pkg install git
+$ git clone https://github.com/AMMUKUTTY/AMMUKUTTY
+$ cd AMMUKUTTY
+$ chmod +x *
+$ npm install @adiwajshing/baileys
+$ npm install chalk
+$ node qr.js
+```
+      
+```js
+SETUP
+$ git clone https://github.com/AMMUKUTTY/AMMUKUTTY
+$ cd AMMUKUTTY
+$ chmod +x *
+$ npm i
+$ node qr.js
+   // scan the qr using whatsapp web on your phone
+$ node bot.js
+```
+## F.A.Q
+Answer a few frequently asked questions;
+### Can you read my messages?
+This project is open source so all the codes are clear. Neither less nor more; you can look what you want. **We absolutely do not have access to your accounts.**
+
+### What about our security?
+If you are concerned about security, you can install it on your own computer. If you think someone else has captured your data, simply click on **Whatsapp> Three Dots> Whatsapp Web> Logout** from all sessions button.
+
+### Is it paid?
+**Of course not.** It will never happen. But you can donate to us. You can reach me via [Telegram](https://t.me/fusuf) .
+
+### ⚠️ Warning! 
+```
+Due to Userbot; Your WhatsApp account may be banned.
+This is an open source project, you are responsible for everything you do. 
+Absolutely, Asena executives do not accept responsibility.
+By establishing the Asena, you are deemed to have accepted these responsibilities.
+```
+
+### ⚠️മുന്നറിയിപ്പ്!
+```
+യൂസർബോട്ട് കാരണം; നിങ്ങളുടെ വാട്ട്‌സ്ആപ്പ് അക്കൗണ്ട് നിരോധിച്ചേക്കാം.
+ഇതൊരു ഓപ്പൺ സോഴ്‌സ് പ്രോജക്റ്റാണ്, നിങ്ങൾ ചെയ്യുന്ന എല്ലാത്തിനും നിങ്ങൾ ഉത്തരവാദിയാണ്.
+തീർച്ചയായും, ഞാനോ അല്ലെങ്കിൽ Asena എക്സിക്യൂട്ടീവുകൾ ഉത്തരവാദിത്തം സ്വീകരിക്കുന്നില്ല.അസേന
+സ്ഥാപിക്കുന്നതിലൂടെ, നിങ്ങൾ ഈ ഉത്തരവാദിത്തങ്ങൾ സ്വീകരിച്ചതായി കണക്കാക്കപ്പെടുന്നു.
+```
+
+
+
+## Developers
+  <div align="center">
+    
+  [![AMMUKUTTY](https://github.com/AMMUKUTTY.png?size=100)](https://github.com/AMMUKUTTY) |  [![Subhashini](https://github.com/subbusubashni.png?size=100)](https://github.com/subbusubashni) | [![afnanplk](https://github.com/afnanplk.png?size=100)](https://github.com/afnanplk) 
+----|----|----
+[AMMUKUTTY](https://github.com/AMMUKUTTY)  | [Subhashini-Selvaraj](https://github.com/subbusubashni) | [afnanplk](https://github.com/afnanplk)
+Author, Base, Bug Fixes, Modules | Modifiying  as   public, Bug Fixes | Bug Fixes, Modules
+  </div>
+ 
+<h3 align="left">Connect with me:</h3>
+<p align="left">
+<a href="https://twitter.com/VISHNUP76080410?s=09" target="blank"><img align="center" src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/twitter.svg" alt="xxirfanx" height="30" width="40" /></a>
+<a href="https://youtube.com/channel/UCIuejw6s9ofhqTUhE1_ErPw" target="blank"><img align="center" src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/youtube.svg" alt="irfan yt ff" height="30" width="40" /></a>
+<a href="https://www.hackerrank.com/hackerking" target="blank"><img align="center" src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/hackerrank.svg" alt="hackerking" height="30" width="40" /></a>
+</p>
+
+<a href='https://archiveprogram.github.com/'><img src='https://raw.githubusercontent.com/acervenky/animated-github-badges/master/assets/acbadge.gif' width='40' height='40'></a> <a href='https://docs.github.com/en/developers'><img src='https://raw.githubusercontent.com/acervenky/animated-github-badges/master/assets/devbadge.gif' width='40' height='40'></a> <a href='https://github.com/pricing'><img src='https://raw.githubusercontent.com/acervenky/animated-github-badges/master/assets/pro.gif' width='40' height='40'></a> <a href='https://stars.github.com/'><img src='https://raw.githubusercontent.com/acervenky/animated-github-badges/master/assets/starbadge.gif' width='35' height='35'></a> <a href='https://docs.github.com/en/github/supporting-the-open-source-community-with-github-sponsors'><img src='https://raw.githubusercontent.com/acervenky/animated-github-badges/master/assets/sponsorbadge.gif' width='35' height='35'></a>
+
+<h3 align="left">Languages and Tools:</h3>
+<p align="left"> <a href="https://developer.android.com" target="_blank"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/android/android-original-wordmark.svg" alt="android" width="40" height="40"/> </a> <a href="https://cloud.google.com" target="_blank"> <img src="https://www.vectorlogo.zone/logos/google_cloud/google_cloud-icon.svg" alt="gcp" width="40" height="40"/> </a> </p>
+
+
+  
+## License
+This project is protected by `GNU General Public Licence v3.0` license.
+
+### Disclaimer
+`WhatsApp` name, its variations and the logo are registered trademarks of Facebook. We have nothing to do with the registered trademark
